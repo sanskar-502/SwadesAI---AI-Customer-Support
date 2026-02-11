@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "prisma": "^6.18.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^2.0.11",
+    "@hono/node-server": "^1.19.9",
+    "@prisma/client": "^6.18.0",
+    "ai": "^6.0.79",
+    "dotenv": "^17.2.4",
+    "hono": "^4.11.9",
+    "hono-rate-limiter": "^0.4.2",
+    "zod": "^3.25.76"
+  }
+}

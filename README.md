@@ -1,135 +1,186 @@
-# Turborepo starter
+# SwadesAI - AI Customer Support (Turborepo)
 
-This Turborepo starter is maintained by the Turborepo core team.
+This monorepo contains a full-stack AI customer support system with a Hono backend, PostgreSQL + Prisma, and a React (Vite) frontend. The backend exposes streaming and sync chat endpoints, and the frontend uses Hono RPC for typed access to backend routes.
 
-## Using this example
+## Repo Structure
 
-Run the following command:
+- `apps/backend` - Hono API, Prisma models, AI tools, seed script
+- `apps/web` - React + Vite + Tailwind UI
 
-```sh
-npx create-turbo@latest
-```
+## Requirements
 
-## What's inside?
+- Node.js 18+
+- npm 10+
+- PostgreSQL database (local or hosted)
 
-This Turborepo includes the following packages/apps:
+## Working Setup Instructions (Detailed)
 
-### Apps and Packages
+This section is the full, step‑by‑step setup that reliably works end‑to‑end.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+1. Prerequisites
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- Node.js 18+ and npm 10+
+- A PostgreSQL database (local or hosted)
 
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+2. Install dependencies (from repo root)
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+npm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+3. Configure backend environment
+
+Create `apps/backend/.env`:
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?schema=public"
+GOOGLE_GENERATIVE_AI_API_KEY="your_gemini_key"
+GEMINI_MODEL="gemini-2.5-flash"
 ```
 
-### Develop
+Notes:
 
-To develop all apps and packages, run the following command:
+- `DATABASE_URL` must be valid or Prisma will fail.
+- If you use a different Gemini model, update `GEMINI_MODEL`.
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+4. Apply database schema
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+cd apps/backend
+npx prisma db push --schema prisma/schema.prisma
 ```
 
-### Remote Caching
+Expected: “Your database is now in sync with your Prisma schema.”
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+5. Seed the database
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+npx tsx prisma/seed.ts
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Expected: no errors. This inserts a user, orders, invoices, FAQs, and a conversation.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+6. Start the backend
 
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+npm run dev -w apps/backend
 ```
 
-## Useful Links
+Expected: “Server is running on port 3000”.
 
-Learn more about the power of Turborepo:
+7. Start the frontend (new terminal)
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+```
+npm run dev -w apps/web
+```
+
+Open: `http://localhost:5173`
+
+8. Verify backend is healthy
+
+```
+curl.exe http://localhost:3000/api/health
+```
+
+Expected:
+
+```
+{"status":"ok","timestamp":"..."}
+```
+
+9. Test the chat API (sync)
+
+```
+curl.exe -X POST "http://localhost:3000/api/chat/sync" `
+  -H "Content-Type: application/json" `
+  -d "{\"messages\":[{\"role\":\"user\",\"content\":\"Where is my order ORD-1002?\"}]}"
+```
+
+Expected: JSON with `text` and `usage`.
+
+10. Test the chat API (streaming)
+
+```
+curl.exe -N -X POST "http://localhost:3000/api/chat" `
+  -H "Content-Type: application/json" `
+  -d "{\"messages\":[{\"role\":\"user\",\"content\":\"Where is my order ORD-1002?\"}]}"
+```
+
+Expected: streamed text output.
+
+11. Run backend tests
+
+```
+npm test -w apps/backend
+```
+
+## Quick Start
+
+1. Install dependencies from repo root:
+
+```
+npm install
+```
+
+2. Configure backend environment:
+
+Create `apps/backend/.env`:
+
+```
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?schema=public"
+GOOGLE_GENERATIVE_AI_API_KEY="your_gemini_key"
+GEMINI_MODEL="gemini-2.5-flash"
+```
+
+3. Prepare database schema and seed data:
+
+```
+cd apps/backend
+npx prisma db push --schema prisma/schema.prisma
+npx tsx prisma/seed.ts
+```
+
+4. Run backend and frontend:
+
+```
+npm run dev -w apps/backend
+npm run dev -w apps/web
+```
+
+Backend: `http://localhost:3000`  
+Frontend: `http://localhost:5173`
+
+## API Endpoints (Backend)
+
+- `GET /api/health` - Health check
+- `GET /api/chat/conversations` - Conversation list for sidebar
+- `POST /api/chat` - Streaming chat (text stream)
+- `POST /api/chat/sync` - Non-streaming JSON response
+
+Request body format:
+
+```
+{
+  "messages": [
+    { "role": "user", "content": "Where is my order ORD-1002?" }
+  ]
+}
+```
+
+## Testing
+
+Backend tests use Vitest:
+
+```
+npm test -w apps/backend
+```
+
+## Notes
+
+- The backend compacts chat context to the last 10 messages.
+- Gemini free-tier quotas are low. If you hit quota limits, you will receive a 429 with a friendly error message.
+- The backend has rate limiting on `/api/*`.
+
+See detailed guides in:
+- `apps/backend/README.md`
+- `apps/web/README.md`

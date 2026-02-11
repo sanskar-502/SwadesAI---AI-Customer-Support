@@ -6,11 +6,8 @@ import type {
   ToolInvocationUIPart,
   UIMessage,
 } from "@ai-sdk/ui-utils";
-import { hc } from "hono/client";
-import type { AppType } from "../../../backend/src/index";
+import client, { API_BASE } from "../lib/api";
 import { Loader, MessageSquare, Send } from "lucide-react";
-
-const client = hc<AppType>("http://localhost:3000");
 
 type ConversationSummary = {
   id: string;
@@ -112,7 +109,7 @@ const ChatInterface = () => {
     status,
     setInput,
   } = useChat({
-    api: "http://localhost:3000/api/chat",
+    api: `${API_BASE}/api/chat`,
     streamProtocol: "text",
     onResponse: async (res) => {
       if (res.ok) return;

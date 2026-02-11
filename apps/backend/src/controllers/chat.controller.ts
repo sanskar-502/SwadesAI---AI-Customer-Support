@@ -1,6 +1,18 @@
 import type { Context } from "hono";
 import { agentService, QuotaExceededError } from "../services/agent.service";
-import { bodySchema } from "../schemas/chat";
+import { chatBodySchema } from "../schemas/chat";
+import type { ChatMessage } from "../schemas/chat";
+import { conversationService } from "../services/conversation.service";
+
+const getLatestUserMessage = (messages: ChatMessage[]): ChatMessage | null => {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const message = messages[i];
+    if (message.role === "user") {
+      return message;
+    }
+  }
+  return null;
+};
 
 export const chatController = async (c: Context) => {
   try {
@@ -11,7 +23,7 @@ export const chatController = async (c: Context) => {
       return c.json({ error: "Invalid JSON body" }, 400);
     }
 
-    const parsed = bodySchema.safeParse(body);
+    const parsed = chatBodySchema.safeParse(body);
     if (!parsed.success) {
       return c.json(
         {
@@ -22,7 +34,32 @@ export const chatController = async (c: Context) => {
       );
     }
 
-    const result = await agentService.runAgent(parsed.data.messages);
+    const conversation = await conversationService.ensureConversation({
+      conversationId: parsed.data.conversationId,
+      userId: parsed.data.userId,
+    });
+
+    const latestUserMessage = getLatestUserMessage(parsed.data.messages);
+    if (latestUserMessage) {
+      await conversationService.appendMessage(conversation.id, latestUserMessage);
+    }
+
+    const result = await agentService.runAgent(parsed.data.messages, {
+      onFinish: async (finalResult) => {
+        const assistantText = finalResult.text?.trim();
+        if (!assistantText) return;
+        try {
+          await conversationService.appendMessage(conversation.id, {
+            role: "assistant",
+            content: assistantText,
+          });
+        } catch (persistError) {
+          console.error("Failed to persist assistant message", persistError);
+        }
+      },
+    });
+
+    c.header("x-conversation-id", conversation.id);
     return result.toTextStreamResponse();
   } catch (error) {
     console.error(error);
@@ -51,7 +88,7 @@ export const chatSyncController = async (c: Context) => {
       return c.json({ error: "Invalid JSON body" }, 400);
     }
 
-    const parsed = bodySchema.safeParse(body);
+    const parsed = chatBodySchema.safeParse(body);
     if (!parsed.success) {
       return c.json(
         {
@@ -62,8 +99,27 @@ export const chatSyncController = async (c: Context) => {
       );
     }
 
+    const conversation = await conversationService.ensureConversation({
+      conversationId: parsed.data.conversationId,
+      userId: parsed.data.userId,
+    });
+
+    const latestUserMessage = getLatestUserMessage(parsed.data.messages);
+    if (latestUserMessage) {
+      await conversationService.appendMessage(conversation.id, latestUserMessage);
+    }
+
     const result = await agentService.runAgentSync(parsed.data.messages);
+    const assistantText = result.text?.trim();
+    if (assistantText) {
+      await conversationService.appendMessage(conversation.id, {
+        role: "assistant",
+        content: assistantText,
+      });
+    }
+
     return c.json({
+      conversationId: conversation.id,
       text: result.text,
       finishReason: result.finishReason,
       usage: result.usage,

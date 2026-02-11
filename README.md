@@ -15,7 +15,7 @@ This monorepo contains a full-stack AI customer support system with a Hono backe
 
 ## Working Setup Instructions (Detailed)
 
-This section is the full, step‑by‑step setup that reliably works end‑to‑end.
+This section is the full, step-by-step setup that reliably works end-to-end.
 
 1. Prerequisites
 
@@ -50,7 +50,7 @@ cd apps/backend
 npx prisma db push --schema prisma/schema.prisma
 ```
 
-Expected: “Your database is now in sync with your Prisma schema.”
+Expected: "Your database is now in sync with your Prisma schema."
 
 5. Seed the database
 
@@ -66,7 +66,7 @@ Expected: no errors. This inserts a user, orders, invoices, FAQs, and a conversa
 npm run dev -w apps/backend
 ```
 
-Expected: “Server is running on port 3000”.
+Expected: "Server is running on port 3000".
 
 7. Start the frontend (new terminal)
 
@@ -153,17 +153,33 @@ Frontend: `http://localhost:5173`
 ## API Endpoints (Backend)
 
 - `GET /api/health` - Health check
-- `GET /api/chat/conversations` - Conversation list for sidebar
+- `GET /api/chat/conversations` - Recent conversation list (for sidebar)
+- `GET /api/chat/conversations/:id` - Full conversation with messages
 - `POST /api/chat` - Streaming chat (text stream)
 - `POST /api/chat/sync` - Non-streaming JSON response
+- `POST /api/chat/messages` - Persist a single message (no AI call)
+- `GET /api/agents` - List available agents and tools
+- `GET /api/agents/:id` - Agent details
 
-Request body format:
+Request body format (chat):
 
 ```
 {
   "messages": [
     { "role": "user", "content": "Where is my order ORD-1002?" }
-  ]
+  ],
+  "conversationId": "optional",
+  "userId": "optional"
+}
+```
+
+Request body format (save a single message):
+
+```
+{
+  "message": { "role": "user", "content": "Hello from Postman" },
+  "conversationId": "optional",
+  "userId": "optional"
 }
 ```
 
@@ -178,6 +194,8 @@ npm test -w apps/backend
 ## Notes
 
 - The backend compacts chat context to the last 10 messages.
+- Conversation persistence is enabled: user + assistant messages are saved to PostgreSQL.
+- `/api/chat/sync` returns `conversationId` in JSON; `/api/chat` returns it in the `x-conversation-id` response header.
 - Gemini free-tier quotas are low. If you hit quota limits, you will receive a 429 with a friendly error message.
 - The backend has rate limiting on `/api/*`.
 

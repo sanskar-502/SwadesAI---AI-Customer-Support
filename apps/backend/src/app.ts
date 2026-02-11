@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { rateLimiter } from "hono-rate-limiter";
 import { chatRoutes } from "./routes/chat";
+import { agentsRoutes } from "./routes/agents";
 
 const app = new Hono();
 
@@ -32,7 +33,8 @@ const routes = app
   .get("/api/health", (c) => {
     return c.json({ status: "ok", timestamp: new Date() });
   })
-  .route("/api/chat", chatRoutes);
+  .route("/api/chat", chatRoutes)
+  .route("/api/agents", agentsRoutes);
 
 export type AppType = typeof routes;
 export { app, routes };

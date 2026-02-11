@@ -64,18 +64,61 @@ npx prisma studio --schema prisma/schema.prisma
 - `GET /api/chat/conversations`  
   Returns recent conversations for the sidebar.
 
+- `GET /api/chat/conversations/:id`  
+  Returns a full conversation with messages.
+
 - `POST /api/chat`  
-  Streaming text response.
+  Streaming text response. The conversation id is returned in the
+  `x-conversation-id` response header.
 
 - `POST /api/chat/sync`  
   JSON response:
   ```
   {
+    "conversationId": "...",
     "text": "...",
     "finishReason": "stop",
     "usage": { ... }
   }
   ```
+
+- `POST /api/chat/messages`  
+  Persists a single message without calling the LLM.
+
+- `GET /api/agents`  
+  Lists available agents and tools.
+
+- `GET /api/agents/:id`  
+  Agent details by id (`router`, `order`, `billing`, `support`).
+
+### Request Body Format (Chat)
+
+```
+{
+  "messages": [
+    { "role": "user", "content": "Where is my order ORD-1002?" }
+  ],
+  "conversationId": "optional",
+  "userId": "optional"
+}
+```
+
+### Request Body Format (Save Message)
+
+```
+{
+  "message": { "role": "user", "content": "Hello from Postman" },
+  "conversationId": "optional",
+  "userId": "optional"
+}
+```
+
+## Conversation Persistence
+
+- Incoming user messages are saved to PostgreSQL.
+- Assistant responses are saved after the LLM finishes.
+- If no `conversationId` is supplied, the service reuses the most recent
+  conversation for the resolved user or creates a new one.
 
 ## Router + Tools
 

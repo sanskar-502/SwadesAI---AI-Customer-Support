@@ -66,9 +66,17 @@ Body format:
 {
   "messages": [
     { "role": "user", "content": "Where is my order ORD-1002?" }
-  ]
+  ],
+  "conversationId": "optional",
+  "userId": "optional"
 }
 ```
+
+Notes:
+
+- The backend persists conversations and messages.
+- `/api/chat/sync` returns `conversationId` in JSON; `/api/chat` returns it in the `x-conversation-id` header.
+- The current UI does not store `conversationId` yet. If you want strict per-thread chats, wire the header/field into the state and send it with each request.
 
 ## Troubleshooting
 

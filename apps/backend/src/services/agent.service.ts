@@ -175,6 +175,9 @@ const tools = {
   }),
 } as const;
 
+type StreamTextOptions = Parameters<typeof streamText>[0];
+type StreamTextOnFinish = NonNullable<StreamTextOptions["onFinish"]>;
+
 export class QuotaExceededError extends Error {
   readonly retryAfterSeconds?: number;
 
@@ -287,7 +290,10 @@ function mapQuotaError(error: unknown): QuotaExceededError | null {
 }
 
 export const agentService = {
-  async runAgent(messages: ChatMessage[]) {
+  async runAgent(
+    messages: ChatMessage[],
+    options?: { onFinish?: StreamTextOnFinish }
+  ) {
     const compactedMessages = messages.slice(-10);
 
     try {
@@ -297,6 +303,7 @@ export const agentService = {
         messages: compactedMessages,
         tools,
         stopWhen: stepCountIs(3),
+        onFinish: options?.onFinish,
         maxRetries: 0,
       });
 
